@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tic-Tac-Toe Mobile</title>
+    <title>Tic-Tac-Toe Pro</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <h1>Tic-Tac-Toe</h1>
-
-        <div id="status">Player X's Turn</div>
+        <div id="status">Your Turn (X)</div>
 
         <div class="board" id="board">
             <div class="cell" onclick="makeMove(0)"></div>
@@ -25,23 +24,23 @@
         </div>
 
         <div class="controls">
-            <select id="mode">
-                <option value="pvp">2 Player</option>
-                <option value="easy">Easy AI</option>
-                <option value="hard">Hard AI</option>
+            <select id="mode" onchange="resetGame()">
+                <option value="pvp">👥 2 Players</option>
+                <option value="easy">🐣 Easy AI</option>
+                <option value="hard">🧠 Hard AI</option>
             </select>
-            <button onclick="resetGame()">Restart</button>
+            <button onclick="resetGame()">Restart Game</button>
         </div>
     </div>
 
     <script>
-        // ... (Keep the same JavaScript from the previous version) ...
         let board = ["", "", "", "", "", "", "", "", ""];
         let currentPlayer = "X";
         let gameOver = false;
 
         async function makeMove(index) {
             if (board[index] !== "" || gameOver) return;
+
             board[index] = currentPlayer;
             updateUI();
             if (checkGameOver()) return;
@@ -68,17 +67,22 @@
         function updateUI() {
             const cells = document.querySelectorAll('.cell');
             board.forEach((val, i) => {
+                if (val !== "" && cells[i].innerText === "") {
+                    cells[i].classList.add('pop');
+                }
                 cells[i].innerText = val;
-                cells[i].style.color = val === "X" ? "#2c3e50" : "#e74c3c";
+                cells[i].style.color = val === "X" ? "#38bdf8" : "#fb7185";
             });
         }
 
         function checkGameOver() {
             const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            const cells = document.querySelectorAll('.cell');
             for (let combo of wins) {
                 if (board[combo[0]] && board[combo[0]] === board[combo[1]] && board[combo[0]] === board[combo[2]]) {
                     document.getElementById('status').innerText = board[combo[0]] + " Wins!";
                     gameOver = true;
+                    combo.forEach(idx => cells[idx].classList.add('winner'));
                     return true;
                 }
             }
@@ -93,8 +97,12 @@
             board = ["", "", "", "", "", "", "", "", ""];
             currentPlayer = "X";
             gameOver = false;
-            document.getElementById('status').innerText = "Player X's Turn";
-            updateUI();
+            document.getElementById('status').innerText = "Your Turn (X)";
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(c => {
+                c.innerText = "";
+                c.classList.remove('pop', 'winner');
+            });
         }
     </script>
 </body>
