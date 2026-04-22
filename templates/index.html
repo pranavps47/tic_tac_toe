@@ -37,30 +37,47 @@
         let board = ["", "", "", "", "", "", "", "", ""];
         let currentPlayer = "X";
         let gameOver = false;
+        let isProcessing = false;
 
         async function makeMove(index) {
-            if (board[index] !== "" || gameOver) return;
+            if (board[index] !== "" || gameOver || isProcessing) return;
 
+            isProcessing = true;
             board[index] = currentPlayer;
             updateUI();
-            if (checkGameOver()) return;
+            
+            if (checkGameOver()) {
+                isProcessing = false;
+                return;
+            }
 
             const mode = document.getElementById('mode').value;
             if (mode !== "pvp") {
-                const response = await fetch('/move', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({board: board, mode: mode})
-                });
-                const data = await response.json();
-                if (data.move !== null) {
-                    board[data.move] = "O";
-                    updateUI();
-                    checkGameOver();
+                document.getElementById('status').innerText = "AI is thinking...";
+                try {
+                    const response = await fetch('/move', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({board: board, mode: mode})
+                    });
+                    const data = await response.json();
+                    if (data.move !== null && !gameOver) {
+                        board[data.move] = "O";
+                        updateUI();
+                        if (!checkGameOver()) {
+                            document.getElementById('status').innerText = "Your Turn (X)";
+                        }
+                    }
+                } catch (error) {
+                    console.error("Move failed:", error);
+                    document.getElementById('status').innerText = "Error - Try again";
+                } finally {
+                    isProcessing = false;
                 }
             } else {
                 currentPlayer = currentPlayer === "X" ? "O" : "X";
                 document.getElementById('status').innerText = `Turn: ${currentPlayer}`;
+                isProcessing = false;
             }
         }
 
@@ -97,6 +114,7 @@
             board = ["", "", "", "", "", "", "", "", ""];
             currentPlayer = "X";
             gameOver = false;
+            isProcessing = false;
             document.getElementById('status').innerText = "Your Turn (X)";
             const cells = document.querySelectorAll('.cell');
             cells.forEach(c => {
